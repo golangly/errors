@@ -400,3 +400,28 @@ func LookupTag(err error, key string) interface{} {
 		return nil
 	}
 }
+
+func Tags(err error) map[string]interface{} {
+	tags := make(map[string]interface{})
+	collectTags(err, tags)
+	return tags
+}
+
+func collectTags(err error, tags map[string]interface{}) {
+	switch t := err.(type) {
+	case *fundamental:
+		for _, tag := range t.tags {
+			tags[tag.Key] = tag.Value
+		}
+	case *withMessage:
+		collectTags(t.cause, tags)
+		for _, tag := range t.tags {
+			tags[tag.Key] = tag.Value
+		}
+	case *withStack:
+		collectTags(t.error, tags)
+		for _, tag := range t.tags {
+			tags[tag.Key] = tag.Value
+		}
+	}
+}
