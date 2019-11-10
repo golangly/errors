@@ -97,6 +97,18 @@ import (
 	"io"
 )
 
+// T is a shortcut to make a Tag
+func T(key string, value interface{}) Tag {
+	return Tag{Key: key, Value: value}
+}
+
+// Tag contains a single key value conbination
+// to be attached to your error
+type Tag struct {
+	Key   string
+	Value interface{}
+}
+
 // New returns an error with the supplied message.
 // New also records the stack trace at the point it was called.
 func New(message string) error {
@@ -120,9 +132,15 @@ func Errorf(format string, args ...interface{}) error {
 type fundamental struct {
 	msg string
 	*stack
+	types []string
+	tags  []Tag
 }
 
 func (f *fundamental) Error() string { return f.msg }
+
+func (f *fundamental) AddTag(key string, value interface{}) { f.AddTags(T(key, value)) }
+func (f *fundamental) AddTags(tags ...Tag)                  { f.tags = append(f.tags, tags...) }
+func (f *fundamental) AddTypes(types ...string)             { f.types = append(f.types, types...) }
 
 func (f *fundamental) Format(s fmt.State, verb rune) {
 	switch verb {
@@ -149,12 +167,16 @@ func WithStack(err error) error {
 	return &withStack{
 		err,
 		callers(),
+		nil,
+		nil,
 	}
 }
 
 type withStack struct {
 	error
 	*stack
+	types []string
+	tags  []Tag
 }
 
 func (w *withStack) Cause() error { return w.error }
@@ -178,6 +200,10 @@ func (w *withStack) Format(s fmt.State, verb rune) {
 	}
 }
 
+func (w *withStack) AddTag(key string, value interface{}) { w.AddTags(T(key, value)) }
+func (w *withStack) AddTags(tags ...Tag)                  { w.tags = append(w.tags, tags...) }
+func (w *withStack) AddTypes(types ...string)             { w.types = append(w.types, types...) }
+
 // Wrap returns an error annotating err with a stack trace
 // at the point Wrap is called, and the supplied message.
 // If err is nil, Wrap returns nil.
@@ -192,6 +218,8 @@ func Wrap(err error, message string) error {
 	return &withStack{
 		err,
 		callers(),
+		nil,
+		nil,
 	}
 }
 
@@ -209,6 +237,8 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	return &withStack{
 		err,
 		callers(),
+		nil,
+		nil,
 	}
 }
 
@@ -239,10 +269,16 @@ func WithMessagef(err error, format string, args ...interface{}) error {
 type withMessage struct {
 	cause error
 	msg   string
+	types []string
+	tags  []Tag
 }
 
 func (w *withMessage) Error() string { return w.msg + ": " + w.cause.Error() }
 func (w *withMessage) Cause() error  { return w.cause }
+
+func (w *withMessage) AddTag(key string, value interface{}) { w.AddTags(T(key, value)) }
+func (w *withMessage) AddTags(tags ...Tag)                  { w.tags = append(w.tags, tags...) }
+func (w *withMessage) AddTypes(types ...string)             { w.types = append(w.types, types...) }
 
 // Unwrap provides compatibility for Go 1.13 error chains.
 func (w *withMessage) Unwrap() error { return w.cause }
@@ -285,4 +321,63 @@ func Cause(err error) error {
 		err = cause.Cause()
 	}
 	return err
+}
+
+// HasType is a helper function that will recurse up from the root error and check that the provided type
+// is present using an equality check
+func HasType(err error, typ string) bool {
+	switch t := err.(type) {
+	case *fundamental:
+		for _, tt := range t.types {
+			if tt == typ {
+				return true
+			}
+		}
+		return false
+	case *withMessage:
+		for _, tt := range t.types {
+			if tt == typ {
+				return true
+			}
+		}
+		return HasType(t.cause, typ)
+	case *withStack:
+		for _, tt := range t.types {
+			if tt == typ {
+				return true
+			}
+		}
+		return HasType(t.error, typ)
+	default:
+		return false
+	}
+}
+
+// LookupTag recursively searches for the provided tag and returns it's value or nil
+func LookupTag(err error, key string) interface{} {
+	switch t := err.(type) {
+	case *fundamental:
+		for _, tag := range t.tags {
+			if tag.Key == key {
+				return true
+			}
+		}
+		return nil
+	case *withMessage:
+		for _, tag := range t.tags {
+			if tag.Key == key {
+				return true
+			}
+		}
+		return LookupTag(t.cause, key)
+	case *withStack:
+		for _, tag := range t.tags {
+			if tag.Key == key {
+				return true
+			}
+		}
+		return LookupTag(t.error, key)
+	default:
+		return nil
+	}
 }
