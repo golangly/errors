@@ -95,6 +95,7 @@ package errors
 import (
 	"fmt"
 	"io"
+	"strings"
 )
 
 // T is a shortcut to make a Tag
@@ -146,15 +147,21 @@ func (f *fundamental) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			io.WriteString(s, f.msg)
+			_, _ = io.WriteString(s, f.msg)
+			for _, tag := range f.tags {
+				_, _ = fmt.Fprintf(s, " %s=%v", tag.Key, tag.Value)
+			}
+			if len(f.types) > 0 {
+				_, _ = fmt.Fprintf(s, " types=%s", strings.Join(f.types, ","))
+			}
 			f.stack.Format(s, verb)
 			return
 		}
 		fallthrough
 	case 's':
-		io.WriteString(s, f.msg)
+		_, _ = io.WriteString(s, f.msg)
 	case 'q':
-		fmt.Fprintf(s, "%q", f.msg)
+		_, _ = fmt.Fprintf(s, "%q", f.msg)
 	}
 }
 
@@ -188,15 +195,21 @@ func (w *withStack) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			fmt.Fprintf(s, "%+v", w.Cause())
+			_, _ = fmt.Fprintf(s, "%+v", w.Cause())
+			for _, tag := range w.tags {
+				_, _ = fmt.Fprintf(s, " %s=%v", tag.Key, tag.Value)
+			}
+			if len(w.types) > 0 {
+				_, _ = fmt.Fprintf(s, " types=%s", strings.Join(w.types, ","))
+			}
 			w.stack.Format(s, verb)
 			return
 		}
 		fallthrough
 	case 's':
-		io.WriteString(s, w.Error())
+		_, _ = io.WriteString(s, w.Error())
 	case 'q':
-		fmt.Fprintf(s, "%q", w.Error())
+		_, _ = fmt.Fprintf(s, "%q", w.Error())
 	}
 }
 
@@ -287,13 +300,19 @@ func (w *withMessage) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			fmt.Fprintf(s, "%+v\n", w.Cause())
-			io.WriteString(s, w.msg)
+			_, _ = fmt.Fprintf(s, "%+v\n", w.Cause())
+			_, _ = io.WriteString(s, w.msg)
+			for _, tag := range w.tags {
+				_, _ = fmt.Fprintf(s, " %s=%v", tag.Key, tag.Value)
+			}
+			if len(w.types) > 0 {
+				_, _ = fmt.Fprintf(s, " types=%s", strings.Join(w.types, ","))
+			}
 			return
 		}
 		fallthrough
 	case 's', 'q':
-		io.WriteString(s, w.Error())
+		_, _ = io.WriteString(s, w.Error())
 	}
 }
 
