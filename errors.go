@@ -401,6 +401,25 @@ func LookupTag(err error, key string) interface{} {
 	}
 }
 
+func Types(err error) []string {
+	switch t := err.(type) {
+	case *fundamental:
+		types := make([]string, len(t.types))
+		for i := 0; i < len(t.types); i++ {
+			types[i] = t.types[i]
+		}
+		return types
+	case *withMessage:
+		types := Types(t.cause)
+		return append(types, t.types...)
+	case *withStack:
+		types := Types(t.error)
+		return append(types, t.types...)
+	default:
+		return []string{}
+	}
+}
+
 func Tags(err error) map[string]interface{} {
 	tags := make(map[string]interface{})
 	collectTags(err, tags)
