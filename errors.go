@@ -378,21 +378,21 @@ func LookupTag(err error, key string) interface{} {
 	case *fundamental:
 		for _, tag := range t.tags {
 			if tag.Key == key {
-				return true
+				return tag.Value
 			}
 		}
 		return nil
 	case *withMessage:
 		for _, tag := range t.tags {
 			if tag.Key == key {
-				return true
+				return tag.Value
 			}
 		}
 		return LookupTag(t.cause, key)
 	case *withStack:
 		for _, tag := range t.tags {
 			if tag.Key == key {
-				return true
+				return tag.Value
 			}
 		}
 		return LookupTag(t.error, key)
