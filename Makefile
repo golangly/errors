@@ -1,10 +1,10 @@
-PKGS := github.com/pkg/errors
+PKGS := github.com/arikkfir/errors
 SRCDIRS := $(shell go list -f '{{.Dir}}' $(PKGS))
 GO := go
 
 check: test vet gofmt misspell unconvert staticcheck ineffassign unparam
 
-test: 
+test:
 	$(GO) test $(PKGS)
 
 vet: | test
@@ -39,6 +39,6 @@ errcheck:
 	$(GO) get github.com/kisielk/errcheck
 	errcheck $(PKGS)
 
-gofmt:  
+gofmt:
 	@echo Checking code is gofmted
 	@test -z "$(shell gofmt -s -l -d -e $(SRCDIRS) | tee /dev/stderr)"
