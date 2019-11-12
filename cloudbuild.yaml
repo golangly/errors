@@ -2,4 +2,4 @@ steps:
   - id: build
     name: golang
     env: ['GO111MODULE=on']
-    args: ['go', 'build', './...']
+    args: ['make', 'check']
