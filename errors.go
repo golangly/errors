@@ -98,6 +98,13 @@ import (
 	"strings"
 )
 
+type ErrorExt interface {
+	error
+	AddTag(key string, value interface{}) ErrorExt
+	AddTags(tags ...Tag) ErrorExt
+	AddTypes(types ...string) ErrorExt
+}
+
 // T is a shortcut to make a Tag
 func T(key string, value interface{}) Tag {
 	return Tag{Key: key, Value: value}
@@ -139,9 +146,15 @@ type fundamental struct {
 
 func (f *fundamental) Error() string { return f.msg }
 
-func (f *fundamental) AddTag(key string, value interface{}) { f.AddTags(T(key, value)) }
-func (f *fundamental) AddTags(tags ...Tag)                  { f.tags = append(f.tags, tags...) }
-func (f *fundamental) AddTypes(types ...string)             { f.types = append(f.types, types...) }
+func (f *fundamental) AddTag(key string, value interface{}) ErrorExt { return f.AddTags(T(key, value)) }
+func (f *fundamental) AddTags(tags ...Tag) ErrorExt {
+	f.tags = append(f.tags, tags...)
+	return f
+}
+func (f *fundamental) AddTypes(types ...string) ErrorExt {
+	f.types = append(f.types, types...)
+	return f
+}
 
 func (f *fundamental) Format(s fmt.State, verb rune) {
 	switch verb {
@@ -213,9 +226,15 @@ func (w *withStack) Format(s fmt.State, verb rune) {
 	}
 }
 
-func (w *withStack) AddTag(key string, value interface{}) { w.AddTags(T(key, value)) }
-func (w *withStack) AddTags(tags ...Tag)                  { w.tags = append(w.tags, tags...) }
-func (w *withStack) AddTypes(types ...string)             { w.types = append(w.types, types...) }
+func (w *withStack) AddTag(key string, value interface{}) ErrorExt { return w.AddTags(T(key, value)) }
+func (w *withStack) AddTags(tags ...Tag) ErrorExt {
+	w.tags = append(w.tags, tags...)
+	return w
+}
+func (w *withStack) AddTypes(types ...string) ErrorExt {
+	w.types = append(w.types, types...)
+	return w
+}
 
 // Wrap returns an error annotating err with a stack trace
 // at the point Wrap is called, and the supplied message.
@@ -289,9 +308,15 @@ type withMessage struct {
 func (w *withMessage) Error() string { return w.msg + ": " + w.cause.Error() }
 func (w *withMessage) Cause() error  { return w.cause }
 
-func (w *withMessage) AddTag(key string, value interface{}) { w.AddTags(T(key, value)) }
-func (w *withMessage) AddTags(tags ...Tag)                  { w.tags = append(w.tags, tags...) }
-func (w *withMessage) AddTypes(types ...string)             { w.types = append(w.types, types...) }
+func (w *withMessage) AddTag(key string, value interface{}) ErrorExt { return w.AddTags(T(key, value)) }
+func (w *withMessage) AddTags(tags ...Tag) ErrorExt {
+	w.tags = append(w.tags, tags...)
+	return w
+}
+func (w *withMessage) AddTypes(types ...string) ErrorExt {
+	w.types = append(w.types, types...)
+	return w
+}
 
 // Unwrap provides compatibility for Go 1.13 error chains.
 func (w *withMessage) Unwrap() error { return w.cause }
