@@ -119,7 +119,7 @@ type Tag struct {
 
 // New returns an error with the supplied message.
 // New also records the stack trace at the point it was called.
-func New(message string) error {
+func New(message string) ErrorExt {
 	return &fundamental{
 		msg:   message,
 		stack: callers(),
@@ -129,7 +129,7 @@ func New(message string) error {
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 // Errorf also records the stack trace at the point it was called.
-func Errorf(format string, args ...interface{}) error {
+func Errorf(format string, args ...interface{}) ErrorExt {
 	return &fundamental{
 		msg:   fmt.Sprintf(format, args...),
 		stack: callers(),
@@ -180,7 +180,7 @@ func (f *fundamental) Format(s fmt.State, verb rune) {
 
 // WithStack annotates err with a stack trace at the point WithStack was called.
 // If err is nil, WithStack returns nil.
-func WithStack(err error) error {
+func WithStack(err error) ErrorExt {
 	if err == nil {
 		return nil
 	}
@@ -239,7 +239,7 @@ func (w *withStack) AddTypes(types ...string) ErrorExt {
 // Wrap returns an error annotating err with a stack trace
 // at the point Wrap is called, and the supplied message.
 // If err is nil, Wrap returns nil.
-func Wrap(err error, message string) error {
+func Wrap(err error, message string) ErrorExt {
 	if err == nil {
 		return nil
 	}
@@ -258,7 +258,7 @@ func Wrap(err error, message string) error {
 // Wrapf returns an error annotating err with a stack trace
 // at the point Wrapf is called, and the format specifier.
 // If err is nil, Wrapf returns nil.
-func Wrapf(err error, format string, args ...interface{}) error {
+func Wrapf(err error, format string, args ...interface{}) ErrorExt {
 	if err == nil {
 		return nil
 	}
@@ -276,7 +276,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 
 // WithMessage annotates err with a new message.
 // If err is nil, WithMessage returns nil.
-func WithMessage(err error, message string) error {
+func WithMessage(err error, message string) ErrorExt {
 	if err == nil {
 		return nil
 	}
@@ -288,7 +288,7 @@ func WithMessage(err error, message string) error {
 
 // WithMessagef annotates err with the format specifier.
 // If err is nil, WithMessagef returns nil.
-func WithMessagef(err error, format string, args ...interface{}) error {
+func WithMessagef(err error, format string, args ...interface{}) ErrorExt {
 	if err == nil {
 		return nil
 	}
@@ -370,6 +370,9 @@ func Cause(err error) error {
 // HasType is a helper function that will recurse up from the root error and check that the provided type
 // is present using an equality check
 func HasType(err error, typ string) bool {
+	if err == nil {
+		return false
+	}
 	switch t := err.(type) {
 	case *fundamental:
 		for _, tt := range t.types {
@@ -399,6 +402,9 @@ func HasType(err error, typ string) bool {
 
 // LookupTag recursively searches for the provided tag and returns it's value or nil
 func LookupTag(err error, key string) interface{} {
+	if err == nil {
+		return nil
+	}
 	switch t := err.(type) {
 	case *fundamental:
 		for _, tag := range t.tags {
@@ -427,6 +433,9 @@ func LookupTag(err error, key string) interface{} {
 }
 
 func Types(err error) []string {
+	if err == nil {
+		return nil
+	}
 	switch t := err.(type) {
 	case *fundamental:
 		types := make([]string, len(t.types))
@@ -446,12 +455,18 @@ func Types(err error) []string {
 }
 
 func Tags(err error) map[string]interface{} {
+	if err == nil {
+		return nil
+	}
 	tags := make(map[string]interface{})
 	collectTags(err, tags)
 	return tags
 }
 
 func collectTags(err error, tags map[string]interface{}) {
+	if err == nil {
+		return
+	}
 	switch t := err.(type) {
 	case *fundamental:
 		for _, tag := range t.tags {
