@@ -1,4 +1,4 @@
-PKGS := github.com/arikkfir/go-errors
+PKGS := github.com/golangly/errors
 SRCDIRS := $(shell go list -f '{{.Dir}}' $(PKGS))
 GO := go
 

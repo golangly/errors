@@ -1,3 +1,3 @@
-module github.com/arikkfir/go-errors
+module github.com/golangly/errors
 
 go 1.13

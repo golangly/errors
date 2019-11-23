@@ -1,4 +1,4 @@
-# errors [![GoDoc](https://godoc.org/github.com/arikkfir/go-errors?status.svg)](http://godoc.org/github.com/arikkfir/go-errors) [![Report card](https://goreportcard.com/badge/github.com/arikkfir/go-errors)](https://goreportcard.com/report/github.com/arikkfir/go-errors) [![Sourcegraph](https://sourcegraph.com/github.com/arikkfir/go-errors/-/badge.svg)](https://sourcegraph.com/github.com/arikkfir/go-errors?badge)
+# errors [![GoDoc](https://godoc.org/github.com/golangly/errors?status.svg)](http://godoc.org/github.com/golangly/errors) [![Report card](https://goreportcard.com/badge/github.com/golangly/errors)](https://goreportcard.com/report/github.com/golangly/errors) [![Sourcegraph](https://sourcegraph.com/github.com/golangly/errors/-/badge.svg)](https://sourcegraph.com/github.com/golangly/errors?badge)
 
 This package is a drop-in replacement to the standard Golang `errors` package. The idea is to add missing constructs (in my opinion) that are useful in robust error handling.
 
