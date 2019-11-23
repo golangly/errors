@@ -88,7 +88,7 @@ var tags map[string]interface{} = errors.Tags(err)
 
 ## Contributing
 
-Please read the [Code of Conduct](./docs/CODE_OF_CONDUCT.md) & [Contributing](./docs/CONTRIBUTING.md) documents.
+Please read the [Code of Conduct](.github/CODE_OF_CONDUCT.md) & [Contributing](.github/CONTRIBUTING.md) documents.
 
 ## License
 
