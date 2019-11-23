@@ -6,7 +6,7 @@ This package is a fork of `github.com/pkg/errors` but incorporates useful ideas 
 
 ## Usage
 
-```
+```go
 // These errors will contain a message and a stacktrace
 errors.New("failed")
 errors.Errorf("bad ID: %d", id)
@@ -14,7 +14,7 @@ errors.Errorf("bad ID: %d", id)
 
 ## Wrapping & causation
 
-```
+```go
 // The wrapping error contains the given prefix and stacktrace, but also
 // provides access to the wrapped error
 err := errors.Wrap(fmt.Errorf("bad bad bad"), "Failed doing something")
