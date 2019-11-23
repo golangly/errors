@@ -1,59 +1,95 @@
-# errors [![Travis-CI](https://travis-ci.org/arikkfir/errors.svg)](https://travis-ci.org/arikkfir/errors) [![AppVeyor](https://ci.appveyor.com/api/projects/status/b98mptawhudj53ep/branch/master?svg=true)](https://ci.appveyor.com/project/davecheney/errors/branch/master) [![GoDoc](https://godoc.org/github.com/arikkfir/errors?status.svg)](http://godoc.org/github.com/arikkfir/errors) [![Report card](https://goreportcard.com/badge/github.com/arikkfir/errors)](https://goreportcard.com/report/github.com/arikkfir/errors) [![Sourcegraph](https://sourcegraph.com/github.com/arikkfir/errors/-/badge.svg)](https://sourcegraph.com/github.com/arikkfir/errors?badge)
+# errors[![GoDoc](https://godoc.org/github.com/arikkfir/go-errors?status.svg)](http://godoc.org/github.com/arikkfir/go-errors) [![Report card](https://goreportcard.com/badge/github.com/arikkfir/go-errors)](https://goreportcard.com/report/github.com/arikkfir/go-errors) [![Sourcegraph](https://sourcegraph.com/github.com/arikkfir/go-errors/-/badge.svg)](https://sourcegraph.com/github.com/arikkfir/go-errors?badge)
 
-Package errors provides simple error handling primitives.
+This package is a drop-in replacement to the standard Golang `errors` package. The idea is to add missing constructs (in my opinion) that are useful in robust error handling.
 
-`go get github.com/arikkfir/errors`
+This package is a fork of `github.com/pkg/errors` but incorporates useful ideas from `github.com/go-playground/errors` - many thanks to both projects!
 
-The traditional error handling idiom in Go is roughly akin to
-```go
-if err != nil {
-        return err
-}
+## Usage
+
 ```
-which applied recursively up the call stack results in error reports without context or debugging information. The errors package allows programmers to add context to the failure path in their code in a way that does not destroy the original value of the error.
-
-## Adding context to an error
-
-The errors.Wrap function returns a new error that adds context to the original error. For example
-```go
-_, err := ioutil.ReadAll(r)
-if err != nil {
-        return errors.Wrap(err, "read failed")
-}
-```
-## Retrieving the cause of an error
-
-Using `errors.Wrap` constructs a stack of errors, adding context to the preceding error. Depending on the nature of the error it may be necessary to reverse the operation of errors.Wrap to retrieve the original error for inspection. Any error value which implements this interface can be inspected by `errors.Cause`.
-```go
-type causer interface {
-        Cause() error
-}
-```
-`errors.Cause` will recursively retrieve the topmost error which does not implement `causer`, which is assumed to be the original cause. For example:
-```go
-switch err := errors.Cause(err).(type) {
-case *MyError:
-        // handle specifically
-default:
-        // unknown error
-}
+// These errors will contain a message and a stacktrace
+errors.New("failed")
+errors.Errorf("bad ID: %d", id)
 ```
 
-[Read the package documentation for more information](https://godoc.org/github.com/arikkfir/errors).
+## Wrapping & causation
 
-## Roadmap
+```
+// The wrapping error contains the given prefix and stacktrace, but also
+// provides access to the wrapped error
+err := errors.Wrap(fmt.Errorf("bad bad bad"), "Failed doing something")
 
-With the upcoming [Go2 error proposals](https://go.googlesource.com/proposal/+/master/design/go2draft.md) this package is moving into maintenance mode. The roadmap for a 1.0 release is as follows:
+// And to access it - this will print "bad bad bad"
+fmt.Println(errors.Unwrap(err).Error())
+fmt.Println(err.Cause().Error())
+```
 
-- 0.9. Remove pre Go 1.9 and Go 1.10 support, address outstanding pull requests (if possible)
-- 1.0. Final release.
+## Tags
+
+You can attach _tags_ to created errors, which is essentially a way to attach metadata about the error, like the ID being updated, the name of the current user, etc.
+
+```go
+// These errors will contain a message and a stacktrace
+err := errors.New("failed reading accounts").AddTag("source", "/file.csv")
+
+// Prints "Source: /file.csv"
+fmt.Printf("Source: %s\n", errors.LookupTag(err, "source"))
+
+// Get all tags
+var tags map[string]interface{} = errors.Tags(err) 
+```
+
+Keep in mind that tags apply to the error wrapping hierarchy - meaning that if one error is wrapping another error, and the wrapped error has a tag, looking up that tag on the wrapping error will provide that tag. Here's an example:
+
+```go
+// Notice how only the "inner" error has the "source" tag.
+inner := errors.New("failed reading accounts").AddTag("source", "/file.csv")
+outer := errors.Wrap(inner, "oops")
+
+// Prints "Source: /file.csv"
+fmt.Printf("Source: %s\n", errors.LookupTag(outer, "source"))
+
+// Get all tags for both "inner" and "outer"
+var tags map[string]interface{} = errors.Tags(err) 
+```
+
+## Types
+
+You can mark certain errors by tainting them with _types_ - essentially enabling you to ask whether a certain error _is of a certain type or not_.
+
+```go
+// These errors will contain a message and a stacktrace
+err := errors.New("failed reading accounts").AddType("persistent")
+
+// Prints "Persistent: true"
+fmt.Printf("Persistent: %b\n", errors.HasType(err, "persistent"))
+// Prints "Transient: false"
+fmt.Printf("Transient: %b\n", errors.HasType(err, "transient"))
+
+// Get all tags
+var types []string = errors.Types(err) 
+```
+
+Keep in mind that types apply to the error wrapping hierarchy - meaning that if one error is wrapping another error, and the wrapped error has a type, looking up that type on the wrapping error will provide that type. Here's an example:
+
+```go
+// Notice how only the "inner" error has the "persistent" type.
+inner := errors.New("failed reading accounts").AddType("persistent")
+outer := errors.Wrap(inner, "oops")
+
+// Prints "Persistent: true"
+fmt.Printf("Persistent: %b\n", errors.HasType(outer, "persistent"))
+// Prints "Transient: false"
+fmt.Printf("Transient: %b\n", errors.HasType(outer, "transient"))
+
+// Get all types for both "inner" and "outer"
+var tags map[string]interface{} = errors.Tags(err) 
+```
 
 ## Contributing
 
-Because of the Go2 errors changes, this package is not accepting proposals for new functionality. With that said, we welcome pull requests, bug fixes and issue reports. 
-
-Before sending a PR, please discuss your change by raising an issue.
+Please read the [Code of Conduct](./docs/CODE_OF_CONDUCT.md) & [Contributing](./docs/CONTRIBUTING.md) documents.
 
 ## License
 
-BSD-2-Clause
+[GNUv3](./LICENSE)
