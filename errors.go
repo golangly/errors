@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -11,6 +12,28 @@ type ErrorExt interface {
 	AddTypes(types ...string) ErrorExt
 }
 
+// Returns a new error with no cause
+func New(message string) ErrorExt {
+	return &wrapper{
+		nil,
+		message,
+		callers(),
+		nil,
+		nil,
+	}
+}
+
+// Returns a new error with no cause
+func Newf(message string) ErrorExt {
+	return &wrapper{
+		nil,
+		message,
+		callers(),
+		nil,
+		nil,
+	}
+}
+
 // Wrap returns an error annotating err with a stack trace
 // at the point Wrap is called, and the supplied message.
 // If err is nil, Wrap returns nil.
@@ -18,12 +41,9 @@ func Wrap(err error, message string) ErrorExt {
 	if err == nil {
 		return nil
 	}
-	err = &withMessage{
-		cause: err,
-		msg:   message,
-	}
-	return &withStack{
+	return &wrapper{
 		err,
+		message,
 		callers(),
 		nil,
 		nil,
@@ -37,28 +57,29 @@ func Wrapf(err error, format string, args ...interface{}) ErrorExt {
 	if err == nil {
 		return nil
 	}
-	err = &withMessage{
-		cause: err,
-		msg:   fmt.Sprintf(format, args...),
-	}
-	return &withStack{
+	return &wrapper{
 		err,
+		fmt.Sprintf(format, args...),
 		callers(),
 		nil,
 		nil,
 	}
 }
 
-// WithStack annotates err with a stack trace at the point WithStack was called.
-// If err is nil, WithStack returns nil.
-func WithStack(err error) ErrorExt {
-	if err == nil {
-		return nil
+// Unwrap returns the wrapped error in the given error, if any. Delegates to the standard "errors" lib.
+func Unwrap(err error) error {
+	return errors.Unwrap(err)
+}
+
+// RootCause returns the root, underlying, cause of an error, if possible.
+func RootCause(err error) error {
+	for err != nil {
+		cause := Unwrap(err)
+		if cause == nil {
+			break
+		} else {
+			err = cause
+		}
 	}
-	return &withStack{
-		err,
-		callers(),
-		nil,
-		nil,
-	}
+	return err
 }

@@ -26,51 +26,22 @@ func Tags(err error) map[string]interface{} {
 func LookupTag(err error, key string) interface{} {
 	if err == nil {
 		return nil
-	}
-	switch t := err.(type) {
-	case *fundamental:
-		for _, tag := range t.tags {
+	} else if w, ok := err.(*wrapper); ok {
+		for _, tag := range w.tags {
 			if tag.Key == key {
 				return tag.Value
 			}
 		}
-		return nil
-	case *withMessage:
-		for _, tag := range t.tags {
-			if tag.Key == key {
-				return tag.Value
-			}
-		}
-		return LookupTag(t.cause, key)
-	case *withStack:
-		for _, tag := range t.tags {
-			if tag.Key == key {
-				return tag.Value
-			}
-		}
-		return LookupTag(t.error, key)
-	default:
+		return LookupTag(w.cause, key)
+	} else {
 		return nil
 	}
 }
 
 func collectTags(err error, tags map[string]interface{}) {
-	if err == nil {
-		return
-	}
-	switch t := err.(type) {
-	case *fundamental:
-		for _, tag := range t.tags {
-			tags[tag.Key] = tag.Value
-		}
-	case *withMessage:
-		collectTags(t.cause, tags)
-		for _, tag := range t.tags {
-			tags[tag.Key] = tag.Value
-		}
-	case *withStack:
-		collectTags(t.error, tags)
-		for _, tag := range t.tags {
+	if w, ok := err.(*wrapper); ok {
+		collectTags(w.cause, tags)
+		for _, tag := range w.tags {
 			tags[tag.Key] = tag.Value
 		}
 	}
