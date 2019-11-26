@@ -24,10 +24,10 @@ func New(message string) ErrorExt {
 }
 
 // Returns a new error with no cause
-func Newf(message string) ErrorExt {
+func Newf(format string, args ...interface{}) ErrorExt {
 	return &wrapper{
 		nil,
-		message,
+		fmt.Sprintf(format, args...),
 		callers(),
 		nil,
 		nil,
