@@ -4,27 +4,28 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 jobs:
-
   build:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
     name: Build
     runs-on: ubuntu-latest
     steps:
 
-    - id: go
-      name: Set up Go 1.13
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.13
-      
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
+      # Setup
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+      - run: go mod download
 
-    - name: Test
-      run: go test ./...
+      # Code smells
+      - run: go vet ./...
+      - run: |
+          find . -name "*_gen.go" -exec rm -fv '{}' ';'
+          test -z "$(gofmt -s -l -d -e . | tee /dev/stderr)"
+          git clean -fd && git checkout .
 
-    - name: Vet
-      run: go vet ./...
-
-    - name: Formatting
-      run: test -z "$(gofmt -s -l -d -e . | tee /dev/stderr)"
+      # Tests
+      - run: go get -u github.com/ory/go-acc && go-acc ./...
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: coverage.txt
