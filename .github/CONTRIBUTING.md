@@ -12,4 +12,4 @@ For cases where the change affects information displayed in the documentation, p
 
 ## Releasing
 
-Create a standard GitHub tag & release.
+Create a standard GitHub tag from a `master` commit, and release.
