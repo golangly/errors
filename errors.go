@@ -17,7 +17,7 @@ func New(message string) ErrorExt {
 	return &wrapper{
 		nil,
 		message,
-		callers(),
+		callers(3),
 		nil,
 		nil,
 	}
@@ -28,7 +28,7 @@ func Newf(format string, args ...interface{}) ErrorExt {
 	return &wrapper{
 		nil,
 		fmt.Sprintf(format, args...),
-		callers(),
+		callers(3),
 		nil,
 		nil,
 	}
@@ -44,7 +44,7 @@ func Wrap(err error, message string) ErrorExt {
 	return &wrapper{
 		err,
 		message,
-		callers(),
+		callers(3),
 		nil,
 		nil,
 	}
@@ -60,7 +60,7 @@ func Wrapf(err error, format string, args ...interface{}) ErrorExt {
 	return &wrapper{
 		err,
 		fmt.Sprintf(format, args...),
-		callers(),
+		callers(3),
 		nil,
 		nil,
 	}
