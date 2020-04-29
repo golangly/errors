@@ -1,4 +1,4 @@
-# errors [![GoDoc](https://godoc.org/github.com/golangly/errors?status.svg)](http://godoc.org/github.com/golangly/errors) [![Report card](https://goreportcard.com/badge/github.com/golangly/errors)](https://goreportcard.com/report/github.com/golangly/errors) [![Sourcegraph](https://sourcegraph.com/github.com/golangly/errors/-/badge.svg)](https://sourcegraph.com/github.com/golangly/errors?badge)
+# errors [![GoDoc](https://godoc.org/github.com/golangly/errors?status.svg)](http://godoc.org/github.com/golangly/errors) [![Report card](https://goreportcard.com/badge/github.com/golangly/errors)](https://goreportcard.com/report/github.com/golangly/errors) [![Sourcegraph](https://sourcegraph.com/github.com/golangly/errors/-/badge.svg)](https://sourcegraph.com/github.com/golangly/errors?badge) [![Coverage Status](https://coveralls.io/repos/github/golangly/errors/badge.svg?branch=master)](https://coveralls.io/github/golangly/errors?branch=master)
 
 This package is a drop-in replacement to the standard Golang `errors` package. The idea is to add missing constructs (in my opinion) that are useful in robust error handling.
 
