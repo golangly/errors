@@ -11,9 +11,9 @@ import (
 type wrapper struct {
 	cause   error
 	message string
-	*stack
-	types []string
-	tags  []Tag
+	stack   *stack
+	types   []string
+	tags    []Tag
 }
 
 // Return the causing (wrapped) error of this error.
