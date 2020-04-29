@@ -17,7 +17,13 @@ type wrapper struct {
 }
 
 // Return the causing (wrapped) error of this error.
-func (w *wrapper) Error() string { return w.message }
+func (w *wrapper) Error() string {
+	if w.cause != nil {
+		return w.message + ": " + w.cause.Error()
+	} else {
+		return w.message
+	}
+}
 
 // Return the causing (wrapped) error of this error.
 func (w *wrapper) Cause() error { return w.cause }
